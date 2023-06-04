@@ -1,0 +1,370 @@
+---
+title: "Choosing faces"
+author: "Tom Mushkat"
+format: html
+editor: visual
+---
+
+```{r, warning=FALSE, message=FASLE}
+
+pacman::p_load(tidyverse, gtsummary, MatchIt, optmatch, skimr, flextable, officer, caret, gt, car, cobalt)
+
+my_smd <- function(data, variable, by, ...){
+  # data=pats; variable="hypertension"; by="study_group"
+  df <- data.frame(y = data[[variable]], x = data[[by]])
+  sm <- summary(lm(y ~ x, data = df))
+  smd <- abs(sm$coefficients[2, 1] / sd(sm$residuals))
+  return(smd)
+}
+
+
+
+set_my_dummies <- function(df, covs = the_covs){
+  
+  df <- sub_data
+  covs <- the_covs
+  
+  df <- df %>% 
+    select(Gender, all_of(covs)) %>% 
+    mutate(Race = as.character(Race))
+  
+  var_types <- data.frame(vname = names(df), vclass = sapply(df, class)) %>% 
+    filter(vname %in% covs)
+  
+  cvars <- var_types %>% 
+    filter(vclass %in% c("character", "factor")) %>% 
+    select(vname) %>% 
+    unlist() %>% 
+    as.character()
+  
+  nvars <- var_types %>% 
+    filter(vclass %in% c("integer", "numeric")) %>% 
+    select(vname) %>%
+    unlist() %>%
+    as.character()
+  
+  df_cvars <- df %>%
+    select(all_of(cvars))
+  
+  dummies <- dummyVars(~ ., data = df_cvars, sep = "_")
+  df_dummies <- as.data.frame(predict(dummies, newdata = df_cvars))
+  
+  df_covbal <- df %>% 
+    select(Gender, all_of(nvars)) %>% 
+    cbind(df_dummies) 
+  
+  names(df_covbal) <- gsub("[-./ ]", "_", names(df_covbal))
+  names(df_covbal) <- gsub("\\+", "plus", names(df_covbal))
+  
+  return(df_covbal)
+}
+
+```
+
+
+
+
+```{r, warning=FALSE, message=FASLE}
+attributes <- read_csv(
+  'C:\\Tom\\Doctorate\\face - Copy\\2kattributes\\Full Attribute Scores\\psychology attributes\\psychology-attributes.csv'
+)
+
+demographic <- read_csv(
+  'C:\\Tom\\Doctorate\\face - Copy\\2kattributes\\Full Attribute Scores\\demographic & others labels\\demographic-others-labels.csv'
+)
+
+data <- attributes %>%
+  inner_join(demographic, join_by(Filename  == Filename))
+
+```
+
+
+```{r, warning=FALSE, message=FASLE}
+data$Race %>% table()
+data$`Is this person famous?` %>% table()
+data$`Image quality` %>% skim()
+data$Age %>% skim()
+
+data %>% 
+  filter( `Is this person famous?` == 0) %>% 
+  select(Filename, Gender, `Is this person famous?`)
+
+```
+
+```{r, warning=FALSE, message=FASLE}
+sub_data <- 
+  data %>% 
+  filter(Race == 1
+         , between(Age, 2, 4)
+         , `Is this person famous?` == 0
+         , `Image quality` >= 4) %>%
+  # mutate(Race = as.character(Race)) %>% 
+  select(Filename, Age, Gender, friendly, intelligent, unintelligent, trustworthy, untrustworthy, confident, uncertain) %>% 
+  drop_na()
+
+```
+
+
+```{r}
+set.seed(123)
+Formula <- Gender ~ Age + friendly + intelligent + unintelligent + trustworthy + untrustworthy + confident + uncertain
+set.seed(123)
+m_data <- 
+  matchit(data = sub_data
+          , formula = Formula
+          , method  = 'optimal'
+          , distance = "mahalanobis"
+          , replace = FALSE
+          , verbose = TRUE)
+
+# final <- 
+#   match.data(m_data, data = sub_data) %>% 
+#   select(-c(weights)) %>% 
+#   arrange(subclass, Gender) 
+
+
+t <- 
+love.plot(m_data,
+          drop.distance = TRUE,
+          var.order = "alphabetical",
+          abs = T,
+          line = F,
+          thresholds = c(m = .1))
+
+t$data %>%
+  group_by(Sample) %>%
+  summarise(M = round(mean(stat), 2)
+            , SD = round(sd(stat), 2)
+            , Med = round(median(stat), 2))
+```
+
+
+```{r}
+set.seed(123)
+m_data_2 <- 
+  matchit(data = sub_data
+          , formula = Formula
+          , method  = 'optimal'
+          , distance = "randomforest"
+          , replace = FALSE
+          , verbose = TRUE)
+
+t <- 
+love.plot(m_data_2,
+          drop.distance = TRUE,
+          var.order = "alphabetical",
+          abs = T,
+          line = F,
+          thresholds = c(m = .1))
+
+t$data %>%
+  group_by(Sample) %>%
+  summarise(M = round(mean(stat), 2)
+            , SD = round(sd(stat), 2)
+            , Med = round(median(stat), 2))
+```
+
+```{r}
+set.seed(123)
+m_data_3 <- 
+  matchit(data = sub_data
+          , formula = Formula
+          , method  = 'optimal'
+          , distance = "glm"
+          , replace = FALSE
+          , verbose = TRUE)
+
+t <- 
+love.plot(m_data_3,
+          drop.distance = TRUE,
+          var.order = "alphabetical",
+          abs = T,
+          line = F,
+          thresholds = c(m = .1))
+
+t$data %>%
+  group_by(Sample) %>%
+  summarise(M = round(mean(stat), 2)
+            , SD = round(sd(stat), 2)
+            , Med = round(median(stat), 2))
+```
+```{r}
+set.seed(123)
+m_data_4 <- 
+  matchit(data = sub_data
+          , formula = Formula
+          , method  = 'optimal'
+          , distance = "elasticnet"
+          , replace = FALSE
+          , verbose = TRUE)
+
+t <- 
+love.plot(m_data_4,
+          drop.distance = TRUE,
+          var.order = "alphabetical",
+          abs = T,
+          line = F,
+          thresholds = c(m = .1))
+ggsave('love_plot_all.png', width = 20, height  = 20, units = 'cm')
+
+t$data %>%
+  group_by(Sample) %>%
+  summarise(M = round(mean(stat), 2)
+            , SD = round(sd(stat), 2)
+            , Med = round(median(stat), 2))
+
+
+
+cov_bal <- sub_data %>% 
+  select(-c(Filename, Race)) %>% 
+  tbl_summary(
+    by = "Gender") %>% 
+  add_stat((fns = everything() ~ my_smd), everything() ~ "label") %>% 
+  modify_header(list(label ~ "covs", add_stat_1 ~ "SMD")) %>% 
+  as_tibble() 
+
+final <- 
+  match.data(m_data_4, data = sub_data) %>% 
+  arrange(subclass, Gender) %>% 
+  select(-c(weights, Filename, Race, subclass)) %>% 
+  head(10) %>% 
+  tbl_summary(
+    by = "Gender"
+    , type = c(Age = "continuous"
+               , intelligent = "continuous"
+               , unintelligent = "continuous"
+               , trustworthy = "continuous"
+               , untrustworthy = "continuous"
+               , confident = "continuous"
+               , uncertain = "continuous")) %>% 
+  add_stat((fns = everything() ~ my_smd), everything() ~ "label") %>% 
+  modify_header(list(label ~ "covs", add_stat_1 ~ "SMD")) %>% 
+  as_tibble() %>% 
+  mutate(Condition = 'Balanced')
+
+cov_bal %>% 
+  select(covs, SMD) %>% 
+  mutate(Condition = 'Unbalanced') %>% 
+  rbind(final[, c('covs', 'SMD', 'Condition')]) %>% 
+  mutate(Condition = as.factor(Condition)
+         , SMD = as.numeric(SMD)) %>% 
+  mutate(Condition = fct_relevel(Condition, c('Unbalanced', 'Balanced'))) %>% 
+  ggplot(aes(y = covs, x = SMD, color = Condition)) +
+  geom_point(size = 3) +
+  geom_vline(xintercept = 0.1) +
+  scale_x_continuous(name = "SMD", breaks = c(0.1, 1, 2), limits = c(0, 2)) +
+  theme_classic() +
+  theme(legend.text = element_text(size = 15))  +
+  theme(legend.title = element_text(size = 17))   +
+  # theme(axis.text.y = element_text(size = 7)) +
+  theme(axis.text.x = element_text(size = 10)) +
+  ylab('') + xlab('') 
+
+```
+
+
+```{r}
+set.seed(123)
+m_data_5 <- 
+  matchit(data = sub_data
+          , formula = Formula
+          , method  = 'optimal'
+          , distance = "robust_mahalanobis"
+          , replace = FALSE
+          , verbose = TRUE)
+
+t <- 
+love.plot(m_data_5,
+          drop.distance = TRUE,
+          var.order = "alphabetical",
+          abs = T,
+          line = F,
+          thresholds = c(m = .1))
+
+t$data %>%
+  group_by(Sample) %>%
+  summarise(M = round(mean(stat), 2)
+            , SD = round(sd(stat), 2)
+            , Med = round(median(stat), 2))
+```
+# Adding dummies
+
+```{r}
+sub_data <- 
+  data %>% 
+  filter(between(Age, 2, 4)
+         , `Is this person famous?` == 0
+         , `Image quality` >= 4) %>%
+  # mutate(Race = as.character(Race)) %>% 
+  select(Filename, Age, Race, Gender, friendly, intelligent, unintelligent, trustworthy, untrustworthy, confident, uncertain) %>% 
+  drop_na()
+
+
+
+the_covs <- c("Race")
+
+co_race <-
+  set_my_dummies(sub_data)
+
+
+```
+
+```{r}
+sub_data <- 
+  data %>% 
+  filter(between(Age, 2, 4)
+         , `Is this person famous?` == 0
+         , `Image quality` >= 4) %>%
+  # mutate(Race = as.character(Race)) %>% 
+  select(Filename, Age, Race, Gender, friendly, intelligent, unintelligent, trustworthy, untrustworthy, confident, uncertain) %>% 
+  drop_na()
+Formula <- Gender ~ Age + Race + friendly + intelligent + unintelligent + trustworthy + untrustworthy + confident + uncertain
+Formula_exact <- Gender ~ Race
+
+set.seed(123)
+m_data <- 
+  matchit(data = sub_data
+          , formula = Formula
+          , exact = Formula_exact
+          , method  = 'optimal'
+          , distance = "elasticnet"
+          , replace = FALSE
+          , verbose = TRUE)
+
+final <- 
+  match.data(m_data, data = sub_data) %>% 
+  select(-c(weights)) %>% 
+  arrange(subclass, Gender) 
+
+t_1 <- 
+love.plot(m_data,
+          drop.distance = TRUE,
+          var.order = "alphabetical",
+          abs = T,
+          line = F,
+          thresholds = c(m = .1))
+
+t_1$data %>%
+  filter(var != 'Race') %>% 
+  group_by(Sample) %>%
+  summarise(M = round(mean(stat), 2)
+            , SD = round(sd(stat), 2)
+            , Med = round(median(stat), 2))
+```
+
+```{r}
+cov_bal_1 <- new %>% 
+  cbind(co_race[c(2:5)]) %>%
+  select(-c(Filename)) %>% 
+  tbl_summary(
+    by = "Gender") %>% 
+  add_stat((fns = everything() ~ my_smd), everything() ~ "label") %>% 
+  modify_header(list(label ~ "covs", add_stat_1 ~ "SMD"))
+
+unbalanced_1 <- cov_bal_1 %>% 
+  as_tibble() 
+```
+
+
+
+
