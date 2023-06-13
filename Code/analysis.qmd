@@ -25,8 +25,10 @@ Data <- Data %>%
   filter((was_physician == 'Yes' & doc_lay == 'doc') |
            (was_physician %in% c("I don't remember", 'No') & doc_lay == 'layperson'))
 
-
 ```
+
+
+
 
 
 ```{r}
@@ -58,28 +60,29 @@ oneWayAnova(Data$Age.x, Data$full_condition)
 ```
 
 
-
+# METI overall
 ```{r, warning=FALSE, message=FALSE}
+Data %>% 
+  select(Competent, Intelligent, Educated, Professional, Experienced, Qualified
+                                                , Sincere, Honest, Just, Fair
+                                                , Moral, Ethical, Responsible, Considerate) %>% 
+  alpha()
 
-
-ez::ezANOVA(data = Data
-            , dv = METI_overall
-            , wid = Q1
+ez::ezANOVA(data      = Data
+            , dv      = METI_overall
+            , wid     = Q1
             , between = c(know_IDK, doc_lay, just_noJust)
-            , type = 3
+            , type    = 3
             , return_aov = TRUE
-            , detailed = FALSE
+            , detailed   = FALSE
 
             , white.adjust = FALSE
 
             , between_covariates = .(white_ethnicity, Male, Age.x, Suprise_bin, vlaKnowledge_bin))
-
 Data %>% 
   group_by(know_IDK, doc_lay, just_noJust) %>% 
   summarise(Mean = mean_cl_normal(Expertise)
             , N = length(Expertise))
-
-
 
 Data %>% 
   mutate(just_noJust = as.factor(just_noJust)
@@ -133,19 +136,22 @@ Data %>%
 
 ```
 
+# METI Expertise
 
 ```{r, warning=FALSE, message=FALSE}
+Data %>% 
+  select(Competent, Intelligent, Educated, Professional, Experienced, Qualified) %>% 
+  alpha()
 
-
-ez::ezANOVA(data = Data
-            , dv = Expertise
-            , wid = Q1
+ez::ezANOVA(data      = Data
+            , dv      = Expertise
+            , wid     = Q1
             , between = c(know_IDK, doc_lay, just_noJust)
-            , type = 3
+            , type    = 3
             , return_aov = TRUE
-            , detailed = FALSE
+            , detailed   = FALSE
 
-            , white.adjust = TRUE
+            , white.adjust = FALSE
 
             , between_covariates = .(white_ethnicity, Male, Age.x, Suprise_bin, vlaKnowledge_bin))
 
@@ -223,18 +229,20 @@ postHoc(Data$Expertise, paste0(Data$just_noJust, Data$know_IDK))
 ```
  
  
- 
+# METI Integrity
 
 ```{r, warning=FALSE, message=FALSE}
+Data %>% 
+  select(Sincere, Honest, Just, Fair) %>% 
+  alpha()
 
-
-ez::ezANOVA(data = Data
-            , dv = Integrity
-            , wid = Q1
+ez::ezANOVA(data      = Data
+            , dv      = Integrity
+            , wid     = Q1
             , between = c(know_IDK, doc_lay, just_noJust)
-            , type = 3
+            , type    = 3
             , return_aov = TRUE
-            , detailed = FALSE
+            , detailed   = FALSE
 
             , white.adjust = FALSE
 
@@ -292,16 +300,20 @@ Data %>%
 
 
 ```
+
+# METI Benevolence
 ```{r, warning=FALSE, message=FALSE}
+Data %>% 
+  select(Moral, Ethical, Responsible, Considerate) %>% 
+  alpha()
 
-
-ez::ezANOVA(data = Data
-            , dv = Benevolence
-            , wid = Q1
+ez::ezANOVA(data      = Data
+            , dv      = Benevolence
+            , wid     = Q1
             , between = c(know_IDK, doc_lay, just_noJust)
-            , type = 3
+            , type    = 3
             , return_aov = TRUE
-            , detailed = FALSE
+            , detailed   = FALSE
 
             , white.adjust = FALSE
 
@@ -357,18 +369,19 @@ Data %>%
 
 ```
 
+# Complaience
 ```{r, warning=FALSE, message=FALSE}
 
 
-ez::ezANOVA(data = Data
-            , dv = Complaience
-            , wid = Q1
+ez::ezANOVA(data      = Data
+            , dv      = Complaience
+            , wid     = Q1
             , between = c(know_IDK, doc_lay, just_noJust)
-            , type = 3
+            , type    = 3
             , return_aov = TRUE
-            , detailed = FALSE
+            , detailed   = FALSE
 
-            , white.adjust = TRUE
+            , white.adjust = FALSE
 
             , between_covariates = .(white_ethnicity, Male, Age.x, Suprise_bin, vlaKnowledge_bin))
 
@@ -440,6 +453,9 @@ Data %>%
 
 ```{r}
 Data$male_face <- if_else(Data$bin_faces == 'Male', 1, 0)
+Data %>% select(full_condition, bin_faces) %>% table()
+Data %>% select(full_condition, odd_is_male) %>% table()
+
 
 regLog1 <- stats::glm(male_face ~ just_noJust * know_IDK * doc_lay * Male +
                         white_ethnicity + Age.x + Suprise_bin  + vlaKnowledge_bin 
