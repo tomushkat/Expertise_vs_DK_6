@@ -118,7 +118,7 @@ data_to_process_2 <- data_to_process_1 %>%
          )
 
 data_to_process_3 <- data_to_process_2 %>% 
-  mutate(m_first_faces = grepl('m', face_expertise_order)) %>% 
+  mutate(m_first_faces = grepl('m', face_expertise_order)) %>% # true is male first
   mutate(know_IDK      = if_else(grepl('IDK', full_condition) == TRUE, 'IDK', 'Know')
          , doc_lay     = if_else(grepl('doc', full_condition) == TRUE, 'doc', 'layperson')
          , just_noJust = if_else(grepl('no_just', full_condition) == TRUE, 'no_just', 'just')
@@ -128,6 +128,14 @@ data_to_process_3 <- data_to_process_2 %>%
            
            m_first_faces == TRUE ~ if_else(face_chosen %% 2 == 0, "Female", 'Male')
            , T ~ if_else(face_chosen %% 2 != 0, "Female", 'Male')
+           
+         )
+         
+         , odd_is_male = case_when(
+           
+           
+           m_first_faces == TRUE ~ face_chosen
+           , T ~ if_else(face_chosen %% 2 == 0, face_chosen - 1, face_chosen + 1)
            
          )
          )
