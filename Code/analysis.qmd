@@ -1,0 +1,471 @@
+---
+title: "Analysis"
+author: "Tom Mushkat"
+format: html
+editor: visual
+---
+
+
+
+```{r}
+pacman::p_load(here, doSPSS, tidyverse, psych, ez, effectsize)
+Data <- read_csv(here('Data//data_to_analyze.csv')) %>% 
+  mutate(Male = if_else(Sex == 'Male', 1, 0))
+
+
+Data %>% nrow()
+table(Data$full_condition, Data$was_physician)
+# 
+Data_wrong <- Data %>%
+  filter((was_physician == 'Yes' & doc_lay != 'doc') |
+           (was_physician %in% c("I don't remember", 'No') & doc_lay != 'layperson'))
+
+
+Data <- Data %>%
+  filter((was_physician == 'Yes' & doc_lay == 'doc') |
+           (was_physician %in% c("I don't remember", 'No') & doc_lay == 'layperson'))
+
+
+```
+
+
+```{r}
+
+Data %>% 
+  select(know_IDK, bin_faces, Sex) %>% 
+  table()
+
+Data %>% 
+  select(doc_lay, bin_faces, Sex) %>% 
+  table()
+
+Data %>% 
+  select(just_noJust, bin_faces, Sex) %>% 
+  table()
+
+
+
+
+table(Data$full_condition, Data$bin_faces)
+table(Data$full_condition, Data$Suprise_bin)
+table(Data$full_condition, Data$rude_bin)
+table(Data$full_condition, Data$vlaKnowledge_bin)
+table(Data$full_condition, Data$white_ethnicity)
+table(Data$full_condition, Data$realHappen_bin)
+table(Data$full_condition, Data$Sex)
+
+oneWayAnova(Data$Age.x, Data$full_condition)
+```
+
+
+
+```{r, warning=FALSE, message=FALSE}
+
+
+ez::ezANOVA(data = Data
+            , dv = METI_overall
+            , wid = Q1
+            , between = c(know_IDK, doc_lay, just_noJust)
+            , type = 3
+            , return_aov = TRUE
+            , detailed = FALSE
+
+            , white.adjust = FALSE
+
+            , between_covariates = .(white_ethnicity, Male, Age.x, Suprise_bin, vlaKnowledge_bin))
+
+Data %>% 
+  group_by(know_IDK, doc_lay, just_noJust) %>% 
+  summarise(Mean = mean_cl_normal(Expertise)
+            , N = length(Expertise))
+
+
+
+Data %>% 
+  mutate(just_noJust = as.factor(just_noJust)
+         , just_noJust = fct_relevel(just_noJust, c('no_just', 'just'))) %>% 
+  ggplot(aes(x = just_noJust, y = METI_overall, fill = doc_lay)) +
+   ggplot2::stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", color = "red", width = 0.2, size = 1, position = position_dodge(0.9)) +
+    ggplot2::stat_summary(fun = mean, geom = "bar", alpha = 0.2, position = position_dodge(0.9)) +
+    ggplot2::theme_bw() +
+  scale_y_continuous(breaks = seq(from = 1, to = 10, by = 1)) +
+  theme(axis.text.x = element_text(size = 10),
+        axis.text.y = element_text(size = 10),
+        axis.title.x = element_text(size = 10),
+        axis.title.y = element_text(size = 10),
+        legend.text = element_text(size = 10),
+        legend.title = element_text(size = 10)) +
+  facet_wrap(~know_IDK ) 
+
+
+Data %>% 
+  mutate(just_noJust = as.factor(just_noJust)
+         , just_noJust = fct_relevel(just_noJust, c('no_just', 'just'))) %>% 
+  ggplot(aes(x = doc_lay, y = METI_overall, fill = doc_lay)) +
+   ggplot2::stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", color = "red", width = 0.2, size = 1, position = position_dodge(0.9)) +
+    ggplot2::stat_summary(fun = mean, geom = "bar", alpha = 0.2, position = position_dodge(0.9)) +
+    ggplot2::theme_bw() +
+  scale_y_continuous(breaks = seq(from = 1, to = 10, by = 1)) +
+  theme(axis.text.x = element_text(size = 10),
+        axis.text.y = element_text(size = 10),
+        axis.title.x = element_text(size = 10),
+        axis.title.y = element_text(size = 10),
+        legend.text = element_text(size = 10),
+        legend.title = element_text(size = 10)) 
+
+
+Data %>% 
+  mutate(just_noJust = as.factor(just_noJust)
+         , just_noJust = fct_relevel(just_noJust, c('no_just', 'just'))) %>% 
+  ggplot(aes(x = know_IDK, y = METI_overall, fill = know_IDK)) +
+   ggplot2::stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", color = "red", width = 0.2, size = 1, position = position_dodge(0.9)) +
+    ggplot2::stat_summary(fun = mean, geom = "bar", alpha = 0.2, position = position_dodge(0.9)) +
+    ggplot2::theme_bw() +
+  scale_y_continuous(breaks = seq(from = 1, to = 10, by = 1)) +
+  theme(axis.text.x = element_text(size = 10),
+        axis.text.y = element_text(size = 10),
+        axis.title.x = element_text(size = 10),
+        axis.title.y = element_text(size = 10),
+        legend.text = element_text(size = 10),
+        legend.title = element_text(size = 10)) 
+
+
+
+```
+
+
+```{r, warning=FALSE, message=FALSE}
+
+
+ez::ezANOVA(data = Data
+            , dv = Expertise
+            , wid = Q1
+            , between = c(know_IDK, doc_lay, just_noJust)
+            , type = 3
+            , return_aov = TRUE
+            , detailed = FALSE
+
+            , white.adjust = TRUE
+
+            , between_covariates = .(white_ethnicity, Male, Age.x, Suprise_bin, vlaKnowledge_bin))
+
+Data %>% 
+  group_by(know_IDK, doc_lay, just_noJust) %>% 
+  summarise(Mean = mean_cl_normal(Expertise)
+            , N = length(Expertise))
+
+
+Data %>% 
+  mutate(just_noJust = as.factor(just_noJust)
+         , just_noJust = fct_relevel(just_noJust, c('no_just', 'just'))) %>% 
+  ggplot(aes(x = just_noJust, y = Expertise, fill = doc_lay)) +
+   ggplot2::stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", color = "red", width = 0.2, size = 1, position = position_dodge(0.9)) +
+    ggplot2::stat_summary(fun = mean, geom = "bar", alpha = 0.2, position = position_dodge(0.9)) +
+    ggplot2::theme_bw() +
+  scale_y_continuous(breaks = seq(from = 1, to = 10, by = 1)) +
+  theme(axis.text.x = element_text(size = 10),
+        axis.text.y = element_text(size = 10),
+        axis.title.x = element_text(size = 10),
+        axis.title.y = element_text(size = 10),
+        legend.text = element_text(size = 10),
+        legend.title = element_text(size = 10)) +
+  facet_wrap(~know_IDK ) 
+
+
+Data %>% 
+  mutate(just_noJust = as.factor(just_noJust)
+         , just_noJust = fct_relevel(just_noJust, c('no_just', 'just'))) %>% 
+  ggplot(aes(x = just_noJust, y = Expertise, fill = just_noJust)) +
+   ggplot2::stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", color = "red", width = 0.2, size = 1, position = position_dodge(0.9)) +
+    ggplot2::stat_summary(fun = mean, geom = "bar", alpha = 0.2, position = position_dodge(0.9)) +
+    ggplot2::theme_bw() +
+  scale_y_continuous(breaks = seq(from = 1, to = 10, by = 1)) +
+  theme(axis.text.x = element_text(size = 10),
+        axis.text.y = element_text(size = 10),
+        axis.title.x = element_text(size = 10),
+        axis.title.y = element_text(size = 10),
+        legend.text = element_text(size = 10),
+        legend.title = element_text(size = 10)) 
+
+
+Data %>% 
+  ggplot(aes(x = doc_lay, y = Expertise, fill = doc_lay)) +
+   ggplot2::stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", color = "red", width = 0.2, size = 1, position = position_dodge(0.9)) +
+    ggplot2::stat_summary(fun = mean, geom = "bar", alpha = 0.2, position = position_dodge(0.9)) +
+    ggplot2::theme_bw() +
+  scale_y_continuous(breaks = seq(from = 1, to = 10, by = 1)) +
+  theme(axis.text.x = element_text(size = 10),
+        axis.text.y = element_text(size = 10),
+        axis.title.x = element_text(size = 10),
+        axis.title.y = element_text(size = 10),
+        legend.text = element_text(size = 10),
+        legend.title = element_text(size = 10)) 
+
+
+Data %>% 
+  mutate(just_noJust = as.factor(just_noJust)
+         , just_noJust = fct_relevel(just_noJust, c('no_just', 'just'))) %>% 
+  ggplot(aes(x = just_noJust, y = Expertise, fill = know_IDK)) +
+   ggplot2::stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", color = "red", width = 0.2, size = 1, position = position_dodge(0.9)) +
+    ggplot2::stat_summary(fun = mean, geom = "bar", alpha = 0.2, position = position_dodge(0.9)) +
+    ggplot2::theme_bw() +
+  scale_y_continuous(breaks = seq(from = 1, to = 10, by = 1)) +
+  theme(axis.text.x = element_text(size = 10),
+        axis.text.y = element_text(size = 10),
+        axis.title.x = element_text(size = 10),
+        axis.title.y = element_text(size = 10),
+        legend.text = element_text(size = 10),
+        legend.title = element_text(size = 10))
+  
+
+
+postHoc(Data$Expertise, paste0(Data$just_noJust, Data$know_IDK))
+```
+ 
+ 
+ 
+
+```{r, warning=FALSE, message=FALSE}
+
+
+ez::ezANOVA(data = Data
+            , dv = Integrity
+            , wid = Q1
+            , between = c(know_IDK, doc_lay, just_noJust)
+            , type = 3
+            , return_aov = TRUE
+            , detailed = FALSE
+
+            , white.adjust = FALSE
+
+            , between_covariates = .(white_ethnicity, Male, Age.x, Suprise_bin, vlaKnowledge_bin))
+
+Data %>% 
+  group_by(know_IDK, doc_lay, just_noJust) %>% 
+  summarise(Mean = mean_cl_normal(Integrity)
+            , N = length(Integrity))
+
+
+Data %>% 
+  mutate(just_noJust = as.factor(just_noJust)
+         , just_noJust = fct_relevel(just_noJust, c('no_just', 'just'))) %>% 
+  ggplot(aes(x = just_noJust, y = Integrity, fill = doc_lay)) +
+   ggplot2::stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", color = "red", width = 0.2, size = 1, position = position_dodge(0.9)) +
+    ggplot2::stat_summary(fun = mean, geom = "bar", alpha = 0.2, position = position_dodge(0.9)) +
+    ggplot2::theme_bw() +
+  scale_y_continuous(breaks = seq(from = 1, to = 10, by = 1)) +
+  theme(axis.text.x = element_text(size = 10),
+        axis.text.y = element_text(size = 10),
+        axis.title.x = element_text(size = 10),
+        axis.title.y = element_text(size = 10),
+        legend.text = element_text(size = 10),
+        legend.title = element_text(size = 10)) +
+  facet_wrap(~know_IDK ) 
+
+
+Data %>% 
+  ggplot(aes(x = know_IDK, y = Integrity, fill = know_IDK)) +
+   ggplot2::stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", color = "red", width = 0.2, size = 1, position = position_dodge(0.9)) +
+    ggplot2::stat_summary(fun = mean, geom = "bar", alpha = 0.2, position = position_dodge(0.9)) +
+    ggplot2::theme_bw() +
+  scale_y_continuous(breaks = seq(from = 1, to = 10, by = 1)) +
+  theme(axis.text.x = element_text(size = 10),
+        axis.text.y = element_text(size = 10),
+        axis.title.x = element_text(size = 10),
+        axis.title.y = element_text(size = 10),
+        legend.text = element_text(size = 10),
+        legend.title = element_text(size = 10)) 
+
+
+Data %>% 
+  ggplot(aes(x = doc_lay, y = Integrity, fill = doc_lay)) +
+   ggplot2::stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", color = "red", width = 0.2, size = 1, position = position_dodge(0.9)) +
+    ggplot2::stat_summary(fun = mean, geom = "bar", alpha = 0.2, position = position_dodge(0.9)) +
+    ggplot2::theme_bw() +
+  scale_y_continuous(breaks = seq(from = 1, to = 10, by = 1)) +
+  theme(axis.text.x = element_text(size = 10),
+        axis.text.y = element_text(size = 10),
+        axis.title.x = element_text(size = 10),
+        axis.title.y = element_text(size = 10),
+        legend.text = element_text(size = 10),
+        legend.title = element_text(size = 10)) 
+
+
+```
+```{r, warning=FALSE, message=FALSE}
+
+
+ez::ezANOVA(data = Data
+            , dv = Benevolence
+            , wid = Q1
+            , between = c(know_IDK, doc_lay, just_noJust)
+            , type = 3
+            , return_aov = TRUE
+            , detailed = FALSE
+
+            , white.adjust = FALSE
+
+            , between_covariates = .(white_ethnicity, Male, Age.x, Suprise_bin, vlaKnowledge_bin))
+
+Data %>% 
+  group_by(know_IDK, doc_lay, just_noJust) %>% 
+  summarise(Mean = mean_cl_normal(Benevolence)
+            , N = length(Benevolence))
+
+
+Data %>% 
+  ggplot(aes(x = just_noJust , y = Benevolence, fill = know_IDK)) +
+   ggplot2::stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", color = "red", width = 0.2, size = 1, position = position_dodge(0.9)) +
+    ggplot2::stat_summary(fun = mean, geom = "bar", alpha = 0.2, position = position_dodge(0.9)) +
+    ggplot2::theme_bw() +
+  scale_y_continuous(breaks = seq(from = 1, to = 10, by = 1)) +
+  theme(axis.text.x = element_text(size = 10),
+        axis.text.y = element_text(size = 10),
+        axis.title.x = element_text(size = 10),
+        axis.title.y = element_text(size = 10),
+        legend.text = element_text(size = 10),
+        legend.title = element_text(size = 10)) +
+  facet_wrap(~doc_lay) 
+
+
+Data %>% 
+  ggplot(aes(x = know_IDK, y = Benevolence, fill = know_IDK)) +
+   ggplot2::stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", color = "red", width = 0.2, size = 1, position = position_dodge(0.9)) +
+    ggplot2::stat_summary(fun = mean, geom = "bar", alpha = 0.2, position = position_dodge(0.9)) +
+    ggplot2::theme_bw() +
+  scale_y_continuous(breaks = seq(from = 1, to = 10, by = 1)) +
+  theme(axis.text.x = element_text(size = 10),
+        axis.text.y = element_text(size = 10),
+        axis.title.x = element_text(size = 10),
+        axis.title.y = element_text(size = 10),
+        legend.text = element_text(size = 10),
+        legend.title = element_text(size = 10)) 
+
+
+Data %>% 
+  ggplot(aes(x = doc_lay, y = Benevolence, fill = doc_lay)) +
+   ggplot2::stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", color = "red", width = 0.2, size = 1, position = position_dodge(0.9)) +
+    ggplot2::stat_summary(fun = mean, geom = "bar", alpha = 0.2, position = position_dodge(0.9)) +
+    ggplot2::theme_bw() +
+  scale_y_continuous(breaks = seq(from = 1, to = 10, by = 1)) +
+  theme(axis.text.x = element_text(size = 10),
+        axis.text.y = element_text(size = 10),
+        axis.title.x = element_text(size = 10),
+        axis.title.y = element_text(size = 10),
+        legend.text = element_text(size = 10),
+        legend.title = element_text(size = 10)) 
+
+```
+
+```{r, warning=FALSE, message=FALSE}
+
+
+ez::ezANOVA(data = Data
+            , dv = Complaience
+            , wid = Q1
+            , between = c(know_IDK, doc_lay, just_noJust)
+            , type = 3
+            , return_aov = TRUE
+            , detailed = FALSE
+
+            , white.adjust = TRUE
+
+            , between_covariates = .(white_ethnicity, Male, Age.x, Suprise_bin, vlaKnowledge_bin))
+
+Data %>% 
+  group_by(know_IDK, doc_lay, just_noJust) %>% 
+  summarise(Mean = mean_cl_normal(Complaience)
+            , N = length(Complaience))
+
+
+Data %>% 
+  ggplot(aes(x = just_noJust , y = Complaience, fill = know_IDK)) +
+   ggplot2::stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", color = "red", width = 0.2, size = 1, position = position_dodge(0.9)) +
+    ggplot2::stat_summary(fun = mean, geom = "bar", alpha = 0.2, position = position_dodge(0.9)) +
+    ggplot2::theme_bw() +
+  scale_y_continuous(breaks = seq(from = 1, to = 10, by = 1)) +
+  theme(axis.text.x = element_text(size = 10),
+        axis.text.y = element_text(size = 10),
+        axis.title.x = element_text(size = 10),
+        axis.title.y = element_text(size = 10),
+        legend.text = element_text(size = 10),
+        legend.title = element_text(size = 10)) +
+  facet_wrap(~doc_lay) 
+
+
+
+Data %>% 
+  ggplot(aes(x = know_IDK, y = Complaience, fill = know_IDK)) +
+   ggplot2::stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", color = "red", width = 0.2, size = 1, position = position_dodge(0.9)) +
+    ggplot2::stat_summary(fun = mean, geom = "bar", alpha = 0.2, position = position_dodge(0.9)) +
+    ggplot2::theme_bw() +
+  scale_y_continuous(breaks = seq(from = 1, to = 10, by = 1)) +
+  theme(axis.text.x = element_text(size = 10),
+        axis.text.y = element_text(size = 10),
+        axis.title.x = element_text(size = 10),
+        axis.title.y = element_text(size = 10),
+        legend.text = element_text(size = 10),
+        legend.title = element_text(size = 10)) 
+
+
+Data %>% 
+  ggplot(aes(x = doc_lay, y = Complaience, fill = doc_lay)) +
+   ggplot2::stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", color = "red", width = 0.2, size = 1, position = position_dodge(0.9)) +
+    ggplot2::stat_summary(fun = mean, geom = "bar", alpha = 0.2, position = position_dodge(0.9)) +
+    ggplot2::theme_bw() +
+  scale_y_continuous(breaks = seq(from = 1, to = 10, by = 1)) +
+  theme(axis.text.x = element_text(size = 10),
+        axis.text.y = element_text(size = 10),
+        axis.title.x = element_text(size = 10),
+        axis.title.y = element_text(size = 10),
+        legend.text = element_text(size = 10),
+        legend.title = element_text(size = 10)) 
+
+
+Data %>% 
+  ggplot(aes(x = doc_lay, y = Complaience, fill = know_IDK)) +
+   ggplot2::stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", color = "red", width = 0.2, size = 1, position = position_dodge(0.9)) +
+    ggplot2::stat_summary(fun = mean, geom = "bar", alpha = 0.2, position = position_dodge(0.9)) +
+    ggplot2::theme_bw() +
+  scale_y_continuous(breaks = seq(from = 1, to = 10, by = 1)) +
+  theme(axis.text.x = element_text(size = 10),
+        axis.text.y = element_text(size = 10),
+        axis.title.x = element_text(size = 10),
+        axis.title.y = element_text(size = 10),
+        legend.text = element_text(size = 10),
+        legend.title = element_text(size = 10))
+```
+
+## Three way interaction logistic regression
+
+```{r}
+Data$male_face <- if_else(Data$bin_faces == 'Male', 1, 0)
+
+regLog1 <- stats::glm(male_face ~ just_noJust * know_IDK * doc_lay * Male +
+                        white_ethnicity + Age.x + Suprise_bin  + vlaKnowledge_bin 
+                        , family = binomial('logit'), data = Data)   # Performing a logistic regression
+  
+ORCI    <- round(exp(cbind(Odds_Ratios = stats::coef(regLog1), stats::confint(regLog1))), 2)  # Calculation odds ratios and confidance intervales for the odds ratios
+
+  cdiff           <- round(regLog1$null.deviance - regLog1$deviance, 2)  # Calculating the Chi square value of the model
+  dfdiff          <- regLog1$df.null - regLog1$df.residual              # Calculating the degrees of freedom value of the model
+  p               <- round(stats::pchisq(q = cdiff, df = dfdiff, lower.tail = FALSE), 100) # Calculating the p value of the model
+  Nagelkerke      <- rcompanion::nagelkerke(fit = regLog1, null = NULL, restrictNobs = FALSE)  # Calculating the explained variance
+  NagelkerkePrint <- paste0(100 * round(Nagelkerke$Pseudo.R.squared.for.model.vs.null[3], 4), "%") # Extracting the explained variance
+
+  Hoslem          <- ResourceSelection::hoslem.test(x = regLog1$y, y = fitted(regLog1), g = 10)  # Calculating the significance of the accuracy
+  hoslemStatistic <- round(Hoslem$statistic, 2)
+  hoslemP         <- round(Hoslem$p.value, 2)
+
+Data %>% 
+  select (bin_faces, doc_lay, know_IDK) %>% 
+  table()
+
+CT(Data$bin_faces[Data$know_IDK == 'IDK' & Data$Male == 1], Data$doc_lay[Data$know_IDK == 'IDK' & Data$Male == 1])
+CT(Data$bin_faces[Data$know_IDK == 'IDK' & Data$Male != 1], Data$doc_lay[Data$know_IDK == 'IDK' & Data$Male != 1])
+
+CT(Data$bin_faces[Data$know_IDK != 'IDK' & Data$Male == 1], Data$doc_lay[Data$know_IDK != 'IDK' & Data$Male == 1])
+CT(Data$bin_faces[Data$know_IDK != 'IDK' & Data$Male != 1], Data$doc_lay[Data$know_IDK != 'IDK' & Data$Male != 1])
+
+
+```

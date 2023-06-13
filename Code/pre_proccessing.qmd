@@ -1,0 +1,145 @@
+---
+title: "data_preperation"
+author: "Tom Mushkat"
+format: html
+editor: visual
+---
+
+
+
+```{r,warning=FALSE,message=FALSE}
+
+pacman::p_load(here, doSPSS, tidyverse)
+
+data_to_process <- read_csv(here("Data\\r_to_proccess.csv")) %>% 
+  filter(!Purpose %in% c('testtesttesttest', 'test')) %>% 
+  filter(! Q1 %in% c('test'))
+female_demographics <- read_csv(here("Data\\female_demographic.csv"))
+male_demographics <- read_csv(here("Data\\male_demographic.csv"))
+
+demographics <- rbind(female_demographics, male_demographics)
+data_to_process <- data_to_process %>% 
+  left_join(demographics, by = join_by('Q1' == `Participant id`)) %>% 
+  mutate(Sex = if_else(is.na(Sex) | Sex %in% c('CONSENT_REVOKED', 'NA') , Gender, Sex)
+         , Sex = if_else(is.na(Sex), 'Female', Sex))
+
+```
+
+```{r,warning=FALSE,message=FALSE}
+convert_meti <- function(data) {
+  
+  data_1 <- case_when (
+    
+      data == '1\nNot at all'  ~ 1
+     , data == '7\nVery much' ~ 7
+     , T ~ as.numeric(data)
+    
+    )
+  
+  return(data_1)
+}
+
+convert_from_string <- function(data) {
+  
+  d <- unique(data) %>%
+    length()
+  
+  for (i in seq(1, d)){
+    i <- i %>% 
+      as.character()
+    t_f = grepl(i, data)
+    d_d <- cbind(dv = data, t_f) %>% 
+      as.data.frame()
+    data <- d_d %>%
+      mutate(t = if_else(t_f == "TRUE", i, dv)) %>%
+      pull(t)
+  }
+  
+  return(data %>% as.numeric())
+}
+  
+
+
+
+
+data_to_process_1 <- 
+  data_to_process %>% 
+    mutate(duration_minutes = `Duration (in seconds)` / 60) %>% 
+  filter(
+         Attention           == '3\nProbably yes'                     # 1
+         , Honesty           == 'Yes, I put in a reasonable effort'   # 14
+         , participateBefore == 'No'                                  # 3
+         , Consecutively     == 'Yes'                                 # 7
+         , Disturbances      == 'No'                                  # 6
+         , Alone             == 'Alone'                               # 1
+         ) %>% 
+   mutate(clean_duration = sdOutliers(`Duration (in seconds)`)) %>%       # 11
+    drop_na(clean_duration)
+
+
+data_to_process_1$Competent    <- data_to_process_1$Competent %>% convert_from_string()
+data_to_process_1$Intelligent  <- data_to_process_1$Intelligent %>% convert_from_string()
+data_to_process_1$Educated     <- data_to_process_1$Educated %>% convert_from_string()
+data_to_process_1$Professional <- data_to_process_1$Professional %>% convert_from_string()
+data_to_process_1$Experienced  <- data_to_process_1$Experienced %>% convert_from_string()
+data_to_process_1$Qualified    <- data_to_process_1$Qualified %>% convert_from_string()
+data_to_process_1$Helpful      <- data_to_process_1$Helpful %>% convert_from_string()
+data_to_process_1$Sincere      <- data_to_process_1$Sincere %>% convert_from_string()
+data_to_process_1$Moral        <- data_to_process_1$Moral %>% convert_from_string()
+data_to_process_1$Ethical      <- data_to_process_1$Ethical %>% convert_from_string()
+data_to_process_1$Responsible  <- data_to_process_1$Responsible %>% convert_from_string()
+data_to_process_1$Considerate  <- data_to_process_1$Considerate %>% convert_from_string()
+data_to_process_1$Complaience  <- data_to_process_1$Complaience %>% convert_from_string()
+data_to_process_1$Honest       <- data_to_process_1$Honest %>% convert_from_string()
+data_to_process_1$Just         <- data_to_process_1$Just %>% convert_from_string()
+data_to_process_1$Unselfish    <- data_to_process_1$Unselfish %>% convert_from_string()
+data_to_process_1$Fair         <- data_to_process_1$Fair %>% convert_from_string()
+
+data_to_process_1$Surprise <- data_to_process_1$Surprise %>% convert_from_string()
+data_to_process_1$rude    <- data_to_process_1$rude %>% convert_from_string()
+data_to_process_1$vlaKnowledge <- data_to_process_1$vlaKnowledge %>% convert_from_string()
+data_to_process_1$realHappen   <- data_to_process_1$realHappen %>% convert_from_string()
+ 
+data_to_process_2 <- data_to_process_1 %>% 
+         mutate(METI_overall  =  rowMeans(cbind(Competent, Intelligent, Educated, Professional, Experienced, Qualified
+                                                , Sincere, Honest, Just, Fair
+                                                , Moral, Ethical, Responsible, Considerate))
+                , Expertise   = rowMeans(cbind(Competent, Intelligent, Educated
+                                             , Professional, Experienced, Qualified))
+                , Integrity   = rowMeans(cbind( Sincere, Honest, Just, Fair))
+                , Benevolence = rowMeans(cbind(Moral, Ethical, Responsible, Considerate))
+                
+                , Suprise_bin      = if_else(Surprise > 2, 1, 0)
+                , rude_bin         = if_else(rude > 2, 1, 0)
+                , vlaKnowledge_bin = if_else(vlaKnowledge > 2, 1, 0)
+                , realHappen_bin   = if_else(realHappen > 2, 1, 0)
+                
+                , white_ethnicity = if_else(`Ethnicity simplified` != 'White' | is.na(`Ethnicity simplified`), 0, 1)
+         )
+
+data_to_process_3 <- data_to_process_2 %>% 
+  mutate(m_first_faces = grepl('m', face_expertise_order)) %>% 
+  mutate(know_IDK      = if_else(grepl('IDK', full_condition) == TRUE, 'IDK', 'Know')
+         , doc_lay     = if_else(grepl('doc', full_condition) == TRUE, 'doc', 'layperson')
+         , just_noJust = if_else(grepl('no_just', full_condition) == TRUE, 'no_just', 'just')
+         , bin_faces = case_when(
+           
+           
+           
+           m_first_faces == TRUE ~ if_else(face_chosen %% 2 == 0, "Female", 'Male')
+           , T ~ if_else(face_chosen %% 2 != 0, "Female", 'Male')
+           
+         )
+         )
+
+data_to_process_3 %>% 
+  select(full_condition, face_expertise_order, face_chosen, m_first_faces, bin_faces) %>% 
+  arrange(full_condition, face_expertise_order, face_chosen, m_first_faces, bin_faces) %>% 
+  view()
+
+
+
+
+write.csv(data_to_process_3, 'data_to_analyze.csv')
+
+```
