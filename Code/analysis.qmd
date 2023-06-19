@@ -9,17 +9,13 @@ editor: visual
 
 ```{r}
 pacman::p_load(here, doSPSS, tidyverse, psych, ez, effectsize)
-Data <- read_csv(here('Data//data_to_analyze.csv')) %>% 
-  mutate(Male = if_else(Sex == 'Male', 1, 0))
-
+Data <- read_csv(here('Data//data_to_analyze.csv')) 
 
 Data %>% nrow()
-table(Data$full_condition, Data$was_physician)
-# 
-Data_wrong <- Data %>%
-  filter((was_physician == 'Yes' & doc_lay != 'doc') |
-           (was_physician %in% c("I don't remember", 'No') & doc_lay != 'layperson'))
+table(Data$full_condition)
 
+
+table(Data$full_condition, Data$was_physician)
 
 Data <- Data %>%
   filter((was_physician == 'Yes' & doc_lay == 'doc') |
@@ -32,35 +28,24 @@ Data <- Data %>%
 
 
 ```{r}
-
-Data %>% 
-  select(know_IDK, bin_faces, Sex) %>% 
-  table()
-
-Data %>% 
-  select(doc_lay, bin_faces, Sex) %>% 
-  table()
-
-Data %>% 
-  select(just_noJust, bin_faces, Sex) %>% 
-  table()
-
-
-
-
 table(Data$full_condition, Data$bin_faces)
 table(Data$full_condition, Data$Suprise_bin)
 table(Data$full_condition, Data$rude_bin)
 table(Data$full_condition, Data$vlaKnowledge_bin)
 table(Data$full_condition, Data$white_ethnicity)
 table(Data$full_condition, Data$realHappen_bin)
-table(Data$full_condition, Data$Sex)
+table(Data$full_condition, Data$male_participant)
 
 oneWayAnova(Data$Age.x, Data$full_condition)
+
+
+indttest(Data$Complaience, Data$Suprise_bin)
+cor.test(Data$Complaience, Data$Age.x)
 ```
 
 
 # METI overall
+ Corr with  Suprise_bin
 ```{r, warning=FALSE, message=FALSE}
 Data %>% 
   select(Competent, Intelligent, Educated, Professional, Experienced, Qualified
@@ -76,18 +61,22 @@ ez::ezANOVA(data      = Data
             , return_aov = TRUE
             , detailed   = FALSE
 
-            , white.adjust = FALSE
+            , white.adjust = FALSE)
 
-            , between_covariates = .(white_ethnicity, Male, Age.x, Suprise_bin, vlaKnowledge_bin))
+
+
+            , between_covariates = .(white_ethnicity, male_participant, Age.x, Suprise_bin, vlaKnowledge_bin))
+
+
 Data %>% 
   group_by(know_IDK, doc_lay, just_noJust) %>% 
-  summarise(Mean = mean_cl_normal(Expertise)
-            , N = length(Expertise))
+  summarise(Mean = mean_cl_normal(METI_overall)
+            , N = length(METI_overall))
 
 Data %>% 
   mutate(just_noJust = as.factor(just_noJust)
          , just_noJust = fct_relevel(just_noJust, c('no_just', 'just'))) %>% 
-  ggplot(aes(x = just_noJust, y = METI_overall, fill = doc_lay)) +
+  ggplot(aes(x = just_noJust, y = METI_overall, fill = know_IDK)) +
    ggplot2::stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", color = "red", width = 0.2, size = 1, position = position_dodge(0.9)) +
     ggplot2::stat_summary(fun = mean, geom = "bar", alpha = 0.2, position = position_dodge(0.9)) +
     ggplot2::theme_bw() +
@@ -98,12 +87,10 @@ Data %>%
         axis.title.y = element_text(size = 10),
         legend.text = element_text(size = 10),
         legend.title = element_text(size = 10)) +
-  facet_wrap(~know_IDK ) 
+  facet_wrap(~doc_lay) 
 
 
 Data %>% 
-  mutate(just_noJust = as.factor(just_noJust)
-         , just_noJust = fct_relevel(just_noJust, c('no_just', 'just'))) %>% 
   ggplot(aes(x = doc_lay, y = METI_overall, fill = doc_lay)) +
    ggplot2::stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", color = "red", width = 0.2, size = 1, position = position_dodge(0.9)) +
     ggplot2::stat_summary(fun = mean, geom = "bar", alpha = 0.2, position = position_dodge(0.9)) +
@@ -118,8 +105,6 @@ Data %>%
 
 
 Data %>% 
-  mutate(just_noJust = as.factor(just_noJust)
-         , just_noJust = fct_relevel(just_noJust, c('no_just', 'just'))) %>% 
   ggplot(aes(x = know_IDK, y = METI_overall, fill = know_IDK)) +
    ggplot2::stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", color = "red", width = 0.2, size = 1, position = position_dodge(0.9)) +
     ggplot2::stat_summary(fun = mean, geom = "bar", alpha = 0.2, position = position_dodge(0.9)) +
@@ -133,10 +118,34 @@ Data %>%
         legend.title = element_text(size = 10)) 
 
 
+Data %>% 
+  mutate(just_noJust = as.factor(just_noJust)
+         , just_noJust = fct_relevel(just_noJust, c('no_just', 'just'))) %>% 
+  ggplot(aes(x = know_IDK, y = METI_overall, fill = just_noJust)) +
+   ggplot2::stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", color = "red", width = 0.2, size = 1, position = position_dodge(0.9)) +
+    ggplot2::stat_summary(fun = mean, geom = "bar", alpha = 0.2, position = position_dodge(0.9)) +
+    ggplot2::theme_bw() +
+  scale_y_continuous(breaks = seq(from = 1, to = 10, by = 1)) +
+  theme(axis.text.x = element_text(size = 10),
+        axis.text.y = element_text(size = 10),
+        axis.title.x = element_text(size = 10),
+        axis.title.y = element_text(size = 10),
+        legend.text = element_text(size = 10),
+        legend.title = element_text(size = 10)) 
+Data %>% 
+  group_by(know_IDK, just_noJust) %>% 
+  summarise(Mean = mean_cl_normal(METI_overall)
+            , N = length(METI_overall))
+
+fit1 <- lm(METI_overall ~ just_noJust * know_IDK, data = Data)
+emmeans::emmeans(fit1, specs = pairwise ~ just_noJust * know_IDK, adjust = 'BH')
+# postHoc(Data$METI_overall, paste0(Data$just_noJust, Data$know_IDK))
+
 
 ```
 
 # METI Expertise
+ Corr with  Suprise_bin
 
 ```{r, warning=FALSE, message=FALSE}
 Data %>% 
@@ -151,9 +160,9 @@ ez::ezANOVA(data      = Data
             , return_aov = TRUE
             , detailed   = FALSE
 
-            , white.adjust = FALSE
+            , white.adjust = FALSE)
 
-            , between_covariates = .(white_ethnicity, Male, Age.x, Suprise_bin, vlaKnowledge_bin))
+            , between_covariates = .(white_ethnicity, male_participant, Age.x, Suprise_bin, vlaKnowledge_bin))
 
 Data %>% 
   group_by(know_IDK, doc_lay, just_noJust) %>% 
@@ -175,7 +184,7 @@ Data %>%
         axis.title.y = element_text(size = 10),
         legend.text = element_text(size = 10),
         legend.title = element_text(size = 10)) +
-  facet_wrap(~know_IDK ) 
+  facet_wrap(~know_IDK) 
 
 
 Data %>% 
@@ -223,9 +232,32 @@ Data %>%
         legend.text = element_text(size = 10),
         legend.title = element_text(size = 10))
   
+fit2 <- lm(Expertise ~ just_noJust * know_IDK, data = Data)
+emmeans::emmeans(fit2, specs = pairwise ~ just_noJust * know_IDK, adjust = 'BH')
+
+# postHoc(Data$Expertise, paste0(Data$just_noJust, Data$know_IDK))
+
+Data %>% 
+  group_by(know_IDK, just_noJust) %>% 
+  summarise(Mean = mean_cl_normal(Expertise)
+            , N = length(Expertise))
 
 
-postHoc(Data$Expertise, paste0(Data$just_noJust, Data$know_IDK))
+
+
+Data %>% 
+  filter(just_noJust == 'no_just') %>% 
+  ggplot(aes(x = know_IDK, y = Expertise, fill = doc_lay)) +
+   ggplot2::stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", color = "red", width = 0.2, size = 1, position = position_dodge(0.9)) +
+    ggplot2::stat_summary(fun = mean, geom = "bar", alpha = 0.2, position = position_dodge(0.9)) +
+    ggplot2::theme_bw() +
+  scale_y_continuous(breaks = seq(from = 1, to = 10, by = 1)) +
+  theme(axis.text.x = element_text(size = 10),
+        axis.text.y = element_text(size = 10),
+        axis.title.x = element_text(size = 10),
+        axis.title.y = element_text(size = 10),
+        legend.text = element_text(size = 10),
+        legend.title = element_text(size = 10)) 
 ```
  
  
@@ -244,9 +276,9 @@ ez::ezANOVA(data      = Data
             , return_aov = TRUE
             , detailed   = FALSE
 
-            , white.adjust = FALSE
+            , white.adjust = FALSE)
 
-            , between_covariates = .(white_ethnicity, Male, Age.x, Suprise_bin, vlaKnowledge_bin))
+            , between_covariates = .(white_ethnicity, male_participant, Age.x, Suprise_bin, vlaKnowledge_bin))
 
 Data %>% 
   group_by(know_IDK, doc_lay, just_noJust) %>% 
@@ -315,9 +347,9 @@ ez::ezANOVA(data      = Data
             , return_aov = TRUE
             , detailed   = FALSE
 
-            , white.adjust = FALSE
+            , white.adjust = FALSE)
 
-            , between_covariates = .(white_ethnicity, Male, Age.x, Suprise_bin, vlaKnowledge_bin))
+            , between_covariates = .(white_ethnicity, male_participant, Age.x, Suprise_bin, vlaKnowledge_bin))
 
 Data %>% 
   group_by(know_IDK, doc_lay, just_noJust) %>% 
@@ -381,9 +413,9 @@ ez::ezANOVA(data      = Data
             , return_aov = TRUE
             , detailed   = FALSE
 
-            , white.adjust = FALSE
+            , white.adjust = TRUE)
 
-            , between_covariates = .(white_ethnicity, Male, Age.x, Suprise_bin, vlaKnowledge_bin))
+            , between_covariates = .(white_ethnicity, male_participant, Age.x, Suprise_bin, vlaKnowledge_bin))
 
 Data %>% 
   group_by(know_IDK, doc_lay, just_noJust) %>% 
@@ -436,6 +468,11 @@ Data %>%
 
 
 Data %>% 
+  group_by(know_IDK, doc_lay) %>% 
+  summarise(Mean = mean_cl_normal(Complaience)
+            , N = length(Complaience))
+
+Data %>% 
   ggplot(aes(x = doc_lay, y = Complaience, fill = know_IDK)) +
    ggplot2::stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", color = "red", width = 0.2, size = 1, position = position_dodge(0.9)) +
     ggplot2::stat_summary(fun = mean, geom = "bar", alpha = 0.2, position = position_dodge(0.9)) +
@@ -447,20 +484,28 @@ Data %>%
         axis.title.y = element_text(size = 10),
         legend.text = element_text(size = 10),
         legend.title = element_text(size = 10))
+
+
+fit3 <- lm(Complaience ~ doc_lay * know_IDK, data = Data)
+emmeans::emmeans(fit3, specs = pairwise ~ doc_lay * know_IDK, adjust = 'BH')
 ```
 
 ## Three way interaction logistic regression
 
 ```{r}
-Data$male_face <- if_else(Data$bin_faces == 'Male', 1, 0)
 Data %>% select(full_condition, bin_faces) %>% table()
 Data %>% select(full_condition, odd_is_male) %>% table()
+face_data <- Data %>% drop_na(male_participant)
 
+CT(Data$bin_faces, Data$vlaKnowledge_bin)
+indttest(Data$Age.x, Data$bin_faces)
 
-regLog1 <- stats::glm(male_face ~ just_noJust * know_IDK * doc_lay * Male +
-                        white_ethnicity + Age.x + Suprise_bin  + vlaKnowledge_bin 
-                        , family = binomial('logit'), data = Data)   # Performing a logistic regression
+regLog1 <- stats::glm(male_face ~ just_noJust * know_IDK * doc_lay * male_participant
+                        , family = binomial('logit'), data = face_data)   # Performing a logistic regression
   
++ male_participant +
+                        white_ethnicity + Age.x + Suprise_bin  + vlaKnowledge_bin 
+
 ORCI    <- round(exp(cbind(Odds_Ratios = stats::coef(regLog1), stats::confint(regLog1))), 2)  # Calculation odds ratios and confidance intervales for the odds ratios
 
   cdiff           <- round(regLog1$null.deviance - regLog1$deviance, 2)  # Calculating the Chi square value of the model
@@ -473,15 +518,88 @@ ORCI    <- round(exp(cbind(Odds_Ratios = stats::coef(regLog1), stats::confint(re
   hoslemStatistic <- round(Hoslem$statistic, 2)
   hoslemP         <- round(Hoslem$p.value, 2)
 
+  
+  
+face_data %>% 
+  mutate(N = nrow(face_data)) %>% 
+  group_by(just_noJust, know_IDK, doc_lay, N) %>% 
+  reframe(n = sum(male_face)
+            , ratio = 100 * n / N) %>%
+  distinct() %>% 
+ggplot(aes(x = just_noJust, y = ratio, fill = know_IDK, color = know_IDK)) + 
+  geom_bar(stat = "identity", position = "dodge")  +
+  theme_bw() +
+  facet_grid(~doc_lay)  
+  
+    
+face_data %>% 
+  filter(male_participant == 1) %>% 
+  mutate(N = nrow(face_data)) %>% 
+  group_by(just_noJust, know_IDK, doc_lay, N) %>% 
+  reframe(n = sum(male_face)
+            , ratio = 100 * n / N) %>%
+    distinct() %>% 
+ggplot(aes(x = just_noJust, y = ratio, fill = know_IDK, color = know_IDK)) + 
+  geom_bar(stat = "identity", position = "dodge")  +
+  theme_bw() +
+  facet_grid(~doc_lay)
+
+face_data %>% 
+  filter(male_participant != 1) %>% 
+  mutate(N = nrow(face_data)) %>% 
+  group_by(just_noJust, know_IDK, doc_lay, N) %>% 
+  reframe(n = sum(male_face)
+            , ratio = 100 * n / N) %>%
+    distinct() %>% 
+ggplot(aes(x = just_noJust, y = ratio, fill = know_IDK, color = know_IDK)) + 
+  geom_bar(stat = "identity", position = "dodge")  +
+  theme_bw() +
+  facet_grid(~doc_lay)
+
+  mutate(N = nrow(face_data)) %>% 
+  group_by(just_noJust, know_IDK, doc_lay, N) %>% 
+  reframe(n = sum(male_face)
+            , ratio = 100 * n / N) %>%
+    distinct() %>% 
+
+
+face_data %>% 
+      mutate(N = nrow(face_data)) %>% 
+
+  group_by(know_IDK, male_participant, doc_lay, N) %>% 
+reframe(n = sum(male_face)
+            , ratio = 100 * n / N) %>%
+    distinct() %>%  
+    mutate(male_participant = if_else(male_participant == 1, 'Man', 'Woman')) %>% 
+ggplot(aes(x = doc_lay, y = ratio, fill = know_IDK, color = know_IDK)) + 
+  geom_bar(stat = "identity", position = "dodge")  +
+  theme_bw() +
+  facet_grid(~male_participant)
+
+
+
 Data %>% 
   select (bin_faces, doc_lay, know_IDK) %>% 
   table()
 
-CT(Data$bin_faces[Data$know_IDK == 'IDK' & Data$Male == 1], Data$doc_lay[Data$know_IDK == 'IDK' & Data$Male == 1])
-CT(Data$bin_faces[Data$know_IDK == 'IDK' & Data$Male != 1], Data$doc_lay[Data$know_IDK == 'IDK' & Data$Male != 1])
 
-CT(Data$bin_faces[Data$know_IDK != 'IDK' & Data$Male == 1], Data$doc_lay[Data$know_IDK != 'IDK' & Data$Male == 1])
-CT(Data$bin_faces[Data$know_IDK != 'IDK' & Data$Male != 1], Data$doc_lay[Data$know_IDK != 'IDK' & Data$Male != 1])
 
+
+Data %>% 
+  select(know_IDK, bin_faces, male_participant) %>% 
+  table()
+
+Data %>% 
+  select(doc_lay, bin_faces, male_participant) %>% 
+  table()
+
+Data %>% 
+  select(just_noJust, bin_faces, male_participant) %>% 
+  table()
+
+CT(face_data$bin_faces, face_data$male_participant)
+regLog1 <- stats::glm(male_face ~ male_participant 
+                        , family = binomial('logit'), data = face_data)   #
+regLog1 %>% summary()
 
 ```

@@ -20,8 +20,18 @@ male_demographics <- read_csv(here("Data\\male_demographic.csv"))
 demographics <- rbind(female_demographics, male_demographics)
 data_to_process <- data_to_process %>% 
   left_join(demographics, by = join_by('Q1' == `Participant id`)) %>% 
-  mutate(Sex = if_else(is.na(Sex) | Sex %in% c('CONSENT_REVOKED', 'NA') , Gender, Sex)
-         , Sex = if_else(is.na(Sex), 'Female', Sex))
+  mutate(uni_Sex = case_when(
+    
+    Gender == Sex                                         ~ Gender
+    , Gender == 'Other' & Sex %in% c('Female', 'Male')    ~ Sex
+    , Gender != 'Other' & ! Sex %in%  c('Female', 'Male') ~ Gender
+    , T                                                   ~ NA_character_
+    
+    )
+  ) %>% 
+  mutate(male_participant = if_else(uni_Sex == 'Male', 1, 0))
+
+     
 
 ```
 
@@ -77,28 +87,28 @@ data_to_process_1 <-
     drop_na(clean_duration)
 
 
-data_to_process_1$Competent    <- data_to_process_1$Competent %>% convert_from_string()
-data_to_process_1$Intelligent  <- data_to_process_1$Intelligent %>% convert_from_string()
-data_to_process_1$Educated     <- data_to_process_1$Educated %>% convert_from_string()
+data_to_process_1$Competent    <- data_to_process_1$Competent    %>% convert_from_string()
+data_to_process_1$Intelligent  <- data_to_process_1$Intelligent  %>% convert_from_string()
+data_to_process_1$Educated     <- data_to_process_1$Educated     %>% convert_from_string()
 data_to_process_1$Professional <- data_to_process_1$Professional %>% convert_from_string()
-data_to_process_1$Experienced  <- data_to_process_1$Experienced %>% convert_from_string()
-data_to_process_1$Qualified    <- data_to_process_1$Qualified %>% convert_from_string()
-data_to_process_1$Helpful      <- data_to_process_1$Helpful %>% convert_from_string()
-data_to_process_1$Sincere      <- data_to_process_1$Sincere %>% convert_from_string()
-data_to_process_1$Moral        <- data_to_process_1$Moral %>% convert_from_string()
-data_to_process_1$Ethical      <- data_to_process_1$Ethical %>% convert_from_string()
-data_to_process_1$Responsible  <- data_to_process_1$Responsible %>% convert_from_string()
-data_to_process_1$Considerate  <- data_to_process_1$Considerate %>% convert_from_string()
-data_to_process_1$Complaience  <- data_to_process_1$Complaience %>% convert_from_string()
-data_to_process_1$Honest       <- data_to_process_1$Honest %>% convert_from_string()
-data_to_process_1$Just         <- data_to_process_1$Just %>% convert_from_string()
-data_to_process_1$Unselfish    <- data_to_process_1$Unselfish %>% convert_from_string()
-data_to_process_1$Fair         <- data_to_process_1$Fair %>% convert_from_string()
+data_to_process_1$Experienced  <- data_to_process_1$Experienced  %>% convert_from_string()
+data_to_process_1$Qualified    <- data_to_process_1$Qualified    %>% convert_from_string()
+data_to_process_1$Helpful      <- data_to_process_1$Helpful      %>% convert_from_string()
+data_to_process_1$Sincere      <- data_to_process_1$Sincere      %>% convert_from_string()
+data_to_process_1$Moral        <- data_to_process_1$Moral        %>% convert_from_string()
+data_to_process_1$Ethical      <- data_to_process_1$Ethical      %>% convert_from_string()
+data_to_process_1$Responsible  <- data_to_process_1$Responsible  %>% convert_from_string()
+data_to_process_1$Considerate  <- data_to_process_1$Considerate  %>% convert_from_string()
+data_to_process_1$Complaience  <- data_to_process_1$Complaience  %>% convert_from_string()
+data_to_process_1$Honest       <- data_to_process_1$Honest       %>% convert_from_string()
+data_to_process_1$Just         <- data_to_process_1$Just         %>% convert_from_string()
+data_to_process_1$Unselfish    <- data_to_process_1$Unselfish    %>% convert_from_string()
+data_to_process_1$Fair         <- data_to_process_1$Fair         %>% convert_from_string()
 
-data_to_process_1$Surprise <- data_to_process_1$Surprise %>% convert_from_string()
-data_to_process_1$rude    <- data_to_process_1$rude %>% convert_from_string()
+data_to_process_1$Surprise     <- data_to_process_1$Surprise     %>% convert_from_string()
+data_to_process_1$rude         <- data_to_process_1$rude         %>% convert_from_string()
 data_to_process_1$vlaKnowledge <- data_to_process_1$vlaKnowledge %>% convert_from_string()
-data_to_process_1$realHappen   <- data_to_process_1$realHappen %>% convert_from_string()
+data_to_process_1$realHappen   <- data_to_process_1$realHappen   %>% convert_from_string()
  
 data_to_process_2 <- data_to_process_1 %>% 
          mutate(METI_overall  =  rowMeans(cbind(Competent, Intelligent, Educated, Professional, Experienced, Qualified
@@ -123,28 +133,21 @@ data_to_process_3 <- data_to_process_2 %>%
          , doc_lay     = if_else(grepl('doc', full_condition) == TRUE, 'doc', 'layperson')
          , just_noJust = if_else(grepl('no_just', full_condition) == TRUE, 'no_just', 'just')
          , bin_faces = case_when(
-           
-           
-           
-           m_first_faces == TRUE ~ if_else(face_chosen %% 2 == 0, "Female", 'Male')
-           , T ~ if_else(face_chosen %% 2 != 0, "Female", 'Male')
-           
-         )
+              m_first_faces == TRUE ~ if_else(face_chosen %% 2 == 0, "Female", 'Male')
+              , T ~ if_else(face_chosen %% 2 != 0, "Female", 'Male')
+            )
          
          , odd_is_male = case_when(
-           
-           
-           m_first_faces == TRUE ~ face_chosen
-           , T ~ if_else(face_chosen %% 2 == 0, face_chosen - 1, face_chosen + 1)
-           
-         )
-         )
+              m_first_faces == TRUE ~ face_chosen
+              , T ~ if_else(face_chosen %% 2 == 0, face_chosen - 1, face_chosen + 1)
+            )
+         ) %>% 
+  mutate(male_face = if_else(bin_faces == 'Male', 1, 0))
 
 data_to_process_3 %>% 
   select(full_condition, face_expertise_order, face_chosen, m_first_faces, bin_faces) %>% 
   arrange(full_condition, face_expertise_order, face_chosen, m_first_faces, bin_faces) %>% 
   view()
-
 
 
 
