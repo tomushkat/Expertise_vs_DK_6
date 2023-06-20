@@ -21,6 +21,12 @@ Data <- Data %>%
   filter((was_physician == 'Yes' & doc_lay == 'doc') |
            (was_physician %in% c("I don't remember", 'No') & doc_lay == 'layperson'))
 
+# Data <- Data %>%
+#   filter((was_physician == 'Yes' & doc_lay == 'doc') |
+#            (was_physician %in% c('No') & doc_lay == 'layperson'))
+
+table(Data$full_condition)
+
 ```
 
 
@@ -77,7 +83,7 @@ Data %>%
   mutate(just_noJust = as.factor(just_noJust)
          , just_noJust = fct_relevel(just_noJust, c('no_just', 'just'))) %>% 
   ggplot(aes(x = just_noJust, y = METI_overall, fill = know_IDK)) +
-   ggplot2::stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", color = "red", width = 0.2, size = 1, position = position_dodge(0.9)) +
+   ggplot2::stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", color = "red", width = 0.2, linewidth = 1, position = position_dodge(0.9)) +
     ggplot2::stat_summary(fun = mean, geom = "bar", alpha = 0.2, position = position_dodge(0.9)) +
     ggplot2::theme_bw() +
   scale_y_continuous(breaks = seq(from = 1, to = 10, by = 1)) +
@@ -92,7 +98,7 @@ Data %>%
 
 Data %>% 
   ggplot(aes(x = doc_lay, y = METI_overall, fill = doc_lay)) +
-   ggplot2::stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", color = "red", width = 0.2, size = 1, position = position_dodge(0.9)) +
+   ggplot2::stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", color = "red", width = 0.2, linewidth = 1, position = position_dodge(0.9)) +
     ggplot2::stat_summary(fun = mean, geom = "bar", alpha = 0.2, position = position_dodge(0.9)) +
     ggplot2::theme_bw() +
   scale_y_continuous(breaks = seq(from = 1, to = 10, by = 1)) +
@@ -106,7 +112,7 @@ Data %>%
 
 Data %>% 
   ggplot(aes(x = know_IDK, y = METI_overall, fill = know_IDK)) +
-   ggplot2::stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", color = "red", width = 0.2, size = 1, position = position_dodge(0.9)) +
+   ggplot2::stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", color = "red", width = 0.2, linewidth = 1, position = position_dodge(0.9)) +
     ggplot2::stat_summary(fun = mean, geom = "bar", alpha = 0.2, position = position_dodge(0.9)) +
     ggplot2::theme_bw() +
   scale_y_continuous(breaks = seq(from = 1, to = 10, by = 1)) +
@@ -122,7 +128,7 @@ Data %>%
   mutate(just_noJust = as.factor(just_noJust)
          , just_noJust = fct_relevel(just_noJust, c('no_just', 'just'))) %>% 
   ggplot(aes(x = know_IDK, y = METI_overall, fill = just_noJust)) +
-   ggplot2::stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", color = "red", width = 0.2, size = 1, position = position_dodge(0.9)) +
+   ggplot2::stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", color = "red", width = 0.2, linewidth = 1, position = position_dodge(0.9)) +
     ggplot2::stat_summary(fun = mean, geom = "bar", alpha = 0.2, position = position_dodge(0.9)) +
     ggplot2::theme_bw() +
   scale_y_continuous(breaks = seq(from = 1, to = 10, by = 1)) +
@@ -174,7 +180,7 @@ Data %>%
   mutate(just_noJust = as.factor(just_noJust)
          , just_noJust = fct_relevel(just_noJust, c('no_just', 'just'))) %>% 
   ggplot(aes(x = just_noJust, y = Expertise, fill = doc_lay)) +
-   ggplot2::stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", color = "red", width = 0.2, size = 1, position = position_dodge(0.9)) +
+   ggplot2::stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", color = "red", width = 0.2, linewidth = 1, position = position_dodge(0.9)) +
     ggplot2::stat_summary(fun = mean, geom = "bar", alpha = 0.2, position = position_dodge(0.9)) +
     ggplot2::theme_bw() +
   scale_y_continuous(breaks = seq(from = 1, to = 10, by = 1)) +
@@ -191,7 +197,7 @@ Data %>%
   mutate(just_noJust = as.factor(just_noJust)
          , just_noJust = fct_relevel(just_noJust, c('no_just', 'just'))) %>% 
   ggplot(aes(x = just_noJust, y = Expertise, fill = just_noJust)) +
-   ggplot2::stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", color = "red", width = 0.2, size = 1, position = position_dodge(0.9)) +
+   ggplot2::stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", color = "red", width = 0.2, linewidth = 1, position = position_dodge(0.9)) +
     ggplot2::stat_summary(fun = mean, geom = "bar", alpha = 0.2, position = position_dodge(0.9)) +
     ggplot2::theme_bw() +
   scale_y_continuous(breaks = seq(from = 1, to = 10, by = 1)) +
@@ -205,7 +211,7 @@ Data %>%
 
 Data %>% 
   ggplot(aes(x = doc_lay, y = Expertise, fill = doc_lay)) +
-   ggplot2::stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", color = "red", width = 0.2, size = 1, position = position_dodge(0.9)) +
+   ggplot2::stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", color = "red", width = 0.2, linewidth = 1, position = position_dodge(0.9)) +
     ggplot2::stat_summary(fun = mean, geom = "bar", alpha = 0.2, position = position_dodge(0.9)) +
     ggplot2::theme_bw() +
   scale_y_continuous(breaks = seq(from = 1, to = 10, by = 1)) +
@@ -221,7 +227,7 @@ Data %>%
   mutate(just_noJust = as.factor(just_noJust)
          , just_noJust = fct_relevel(just_noJust, c('no_just', 'just'))) %>% 
   ggplot(aes(x = just_noJust, y = Expertise, fill = know_IDK)) +
-   ggplot2::stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", color = "red", width = 0.2, size = 1, position = position_dodge(0.9)) +
+   ggplot2::stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", color = "red", width = 0.2, linewidth = 1, position = position_dodge(0.9)) +
     ggplot2::stat_summary(fun = mean, geom = "bar", alpha = 0.2, position = position_dodge(0.9)) +
     ggplot2::theme_bw() +
   scale_y_continuous(breaks = seq(from = 1, to = 10, by = 1)) +
@@ -248,7 +254,7 @@ Data %>%
 Data %>% 
   filter(just_noJust == 'no_just') %>% 
   ggplot(aes(x = know_IDK, y = Expertise, fill = doc_lay)) +
-   ggplot2::stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", color = "red", width = 0.2, size = 1, position = position_dodge(0.9)) +
+   ggplot2::stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", color = "red", width = 0.2, linewidth = 1, position = position_dodge(0.9)) +
     ggplot2::stat_summary(fun = mean, geom = "bar", alpha = 0.2, position = position_dodge(0.9)) +
     ggplot2::theme_bw() +
   scale_y_continuous(breaks = seq(from = 1, to = 10, by = 1)) +
@@ -290,7 +296,7 @@ Data %>%
   mutate(just_noJust = as.factor(just_noJust)
          , just_noJust = fct_relevel(just_noJust, c('no_just', 'just'))) %>% 
   ggplot(aes(x = just_noJust, y = Integrity, fill = doc_lay)) +
-   ggplot2::stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", color = "red", width = 0.2, size = 1, position = position_dodge(0.9)) +
+   ggplot2::stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", color = "red", width = 0.2, linewidth = 1, position = position_dodge(0.9)) +
     ggplot2::stat_summary(fun = mean, geom = "bar", alpha = 0.2, position = position_dodge(0.9)) +
     ggplot2::theme_bw() +
   scale_y_continuous(breaks = seq(from = 1, to = 10, by = 1)) +
@@ -305,7 +311,7 @@ Data %>%
 
 Data %>% 
   ggplot(aes(x = know_IDK, y = Integrity, fill = know_IDK)) +
-   ggplot2::stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", color = "red", width = 0.2, size = 1, position = position_dodge(0.9)) +
+   ggplot2::stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", color = "red", width = 0.2, linewidth = 1, position = position_dodge(0.9)) +
     ggplot2::stat_summary(fun = mean, geom = "bar", alpha = 0.2, position = position_dodge(0.9)) +
     ggplot2::theme_bw() +
   scale_y_continuous(breaks = seq(from = 1, to = 10, by = 1)) +
@@ -319,7 +325,7 @@ Data %>%
 
 Data %>% 
   ggplot(aes(x = doc_lay, y = Integrity, fill = doc_lay)) +
-   ggplot2::stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", color = "red", width = 0.2, size = 1, position = position_dodge(0.9)) +
+   ggplot2::stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", color = "red", width = 0.2, linewidth = 1, position = position_dodge(0.9)) +
     ggplot2::stat_summary(fun = mean, geom = "bar", alpha = 0.2, position = position_dodge(0.9)) +
     ggplot2::theme_bw() +
   scale_y_continuous(breaks = seq(from = 1, to = 10, by = 1)) +
@@ -359,7 +365,7 @@ Data %>%
 
 Data %>% 
   ggplot(aes(x = just_noJust , y = Benevolence, fill = know_IDK)) +
-   ggplot2::stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", color = "red", width = 0.2, size = 1, position = position_dodge(0.9)) +
+   ggplot2::stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", color = "red", width = 0.2, linewidth = 1, position = position_dodge(0.9)) +
     ggplot2::stat_summary(fun = mean, geom = "bar", alpha = 0.2, position = position_dodge(0.9)) +
     ggplot2::theme_bw() +
   scale_y_continuous(breaks = seq(from = 1, to = 10, by = 1)) +
@@ -374,7 +380,7 @@ Data %>%
 
 Data %>% 
   ggplot(aes(x = know_IDK, y = Benevolence, fill = know_IDK)) +
-   ggplot2::stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", color = "red", width = 0.2, size = 1, position = position_dodge(0.9)) +
+   ggplot2::stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", color = "red", width = 0.2, linewidth = 1, position = position_dodge(0.9)) +
     ggplot2::stat_summary(fun = mean, geom = "bar", alpha = 0.2, position = position_dodge(0.9)) +
     ggplot2::theme_bw() +
   scale_y_continuous(breaks = seq(from = 1, to = 10, by = 1)) +
@@ -388,7 +394,7 @@ Data %>%
 
 Data %>% 
   ggplot(aes(x = doc_lay, y = Benevolence, fill = doc_lay)) +
-   ggplot2::stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", color = "red", width = 0.2, size = 1, position = position_dodge(0.9)) +
+   ggplot2::stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", color = "red", width = 0.2, linewidth = 1, position = position_dodge(0.9)) +
     ggplot2::stat_summary(fun = mean, geom = "bar", alpha = 0.2, position = position_dodge(0.9)) +
     ggplot2::theme_bw() +
   scale_y_continuous(breaks = seq(from = 1, to = 10, by = 1)) +
@@ -425,7 +431,7 @@ Data %>%
 
 Data %>% 
   ggplot(aes(x = just_noJust , y = Complaience, fill = know_IDK)) +
-   ggplot2::stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", color = "red", width = 0.2, size = 1, position = position_dodge(0.9)) +
+   ggplot2::stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", color = "red", width = 0.2, linewidth = 1, position = position_dodge(0.9)) +
     ggplot2::stat_summary(fun = mean, geom = "bar", alpha = 0.2, position = position_dodge(0.9)) +
     ggplot2::theme_bw() +
   scale_y_continuous(breaks = seq(from = 1, to = 10, by = 1)) +
@@ -441,7 +447,7 @@ Data %>%
 
 Data %>% 
   ggplot(aes(x = know_IDK, y = Complaience, fill = know_IDK)) +
-   ggplot2::stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", color = "red", width = 0.2, size = 1, position = position_dodge(0.9)) +
+   ggplot2::stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", color = "red", width = 0.2, linewidth = 1, position = position_dodge(0.9)) +
     ggplot2::stat_summary(fun = mean, geom = "bar", alpha = 0.2, position = position_dodge(0.9)) +
     ggplot2::theme_bw() +
   scale_y_continuous(breaks = seq(from = 1, to = 10, by = 1)) +
@@ -455,7 +461,7 @@ Data %>%
 
 Data %>% 
   ggplot(aes(x = doc_lay, y = Complaience, fill = doc_lay)) +
-   ggplot2::stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", color = "red", width = 0.2, size = 1, position = position_dodge(0.9)) +
+   ggplot2::stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", color = "red", width = 0.2, linewidth = 1, position = position_dodge(0.9)) +
     ggplot2::stat_summary(fun = mean, geom = "bar", alpha = 0.2, position = position_dodge(0.9)) +
     ggplot2::theme_bw() +
   scale_y_continuous(breaks = seq(from = 1, to = 10, by = 1)) +
@@ -474,7 +480,7 @@ Data %>%
 
 Data %>% 
   ggplot(aes(x = doc_lay, y = Complaience, fill = know_IDK)) +
-   ggplot2::stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", color = "red", width = 0.2, size = 1, position = position_dodge(0.9)) +
+   ggplot2::stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", color = "red", width = 0.2, linewidth = 1, position = position_dodge(0.9)) +
     ggplot2::stat_summary(fun = mean, geom = "bar", alpha = 0.2, position = position_dodge(0.9)) +
     ggplot2::theme_bw() +
   scale_y_continuous(breaks = seq(from = 1, to = 10, by = 1)) +
@@ -495,12 +501,14 @@ emmeans::emmeans(fit3, specs = pairwise ~ doc_lay * know_IDK, adjust = 'BH')
 ```{r}
 Data %>% select(full_condition, bin_faces) %>% table()
 Data %>% select(full_condition, odd_is_male) %>% table()
-face_data <- Data %>% drop_na(male_participant)
+
+face_data <- Data %>%
+  drop_na(male_participant)
 
 CT(Data$bin_faces, Data$vlaKnowledge_bin)
 indttest(Data$Age.x, Data$bin_faces)
 
-regLog1 <- stats::glm(male_face ~ just_noJust * know_IDK * doc_lay * male_participant
+regLog1 <- stats::glm(male_face ~ just_noJust * know_IDK * doc_lay #* male_participant
                         , family = binomial('logit'), data = face_data)   # Performing a logistic regression
   
 + male_participant +
@@ -521,10 +529,10 @@ ORCI    <- round(exp(cbind(Odds_Ratios = stats::coef(regLog1), stats::confint(re
   
   
 face_data %>% 
-  mutate(N = nrow(face_data)) %>% 
-  group_by(just_noJust, know_IDK, doc_lay, N) %>% 
-  reframe(n = sum(male_face)
-            , ratio = 100 * n / N) %>%
+  group_by(just_noJust, know_IDK, doc_lay) %>% 
+  reframe(s = sum(male_face)
+          , L = length(male_face)
+            , ratio = 100 * s / L) %>%
   distinct() %>% 
 ggplot(aes(x = just_noJust, y = ratio, fill = know_IDK, color = know_IDK)) + 
   geom_bar(stat = "identity", position = "dodge")  +
@@ -534,10 +542,10 @@ ggplot(aes(x = just_noJust, y = ratio, fill = know_IDK, color = know_IDK)) +
     
 face_data %>% 
   filter(male_participant == 1) %>% 
-  mutate(N = nrow(face_data)) %>% 
-  group_by(just_noJust, know_IDK, doc_lay, N) %>% 
-  reframe(n = sum(male_face)
-            , ratio = 100 * n / N) %>%
+  group_by(just_noJust, know_IDK, doc_lay) %>% 
+  reframe(s = sum(male_face)
+          , L = length(male_face)
+            , ratio = 100 * s / L) %>%
     distinct() %>% 
 ggplot(aes(x = just_noJust, y = ratio, fill = know_IDK, color = know_IDK)) + 
   geom_bar(stat = "identity", position = "dodge")  +
@@ -546,29 +554,24 @@ ggplot(aes(x = just_noJust, y = ratio, fill = know_IDK, color = know_IDK)) +
 
 face_data %>% 
   filter(male_participant != 1) %>% 
-  mutate(N = nrow(face_data)) %>% 
-  group_by(just_noJust, know_IDK, doc_lay, N) %>% 
-  reframe(n = sum(male_face)
-            , ratio = 100 * n / N) %>%
+  group_by(just_noJust, know_IDK, doc_lay) %>% 
+  reframe(s = sum(male_face)
+          , L = length(male_face)
+            , ratio = 100 * s / L) %>%
     distinct() %>% 
 ggplot(aes(x = just_noJust, y = ratio, fill = know_IDK, color = know_IDK)) + 
   geom_bar(stat = "identity", position = "dodge")  +
   theme_bw() +
   facet_grid(~doc_lay)
 
-  mutate(N = nrow(face_data)) %>% 
-  group_by(just_noJust, know_IDK, doc_lay, N) %>% 
-  reframe(n = sum(male_face)
-            , ratio = 100 * n / N) %>%
-    distinct() %>% 
+
 
 
 face_data %>% 
-      mutate(N = nrow(face_data)) %>% 
-
-  group_by(know_IDK, male_participant, doc_lay, N) %>% 
-reframe(n = sum(male_face)
-            , ratio = 100 * n / N) %>%
+  group_by(just_noJust, know_IDK, doc_lay, male_participant) %>% 
+  reframe(s = sum(male_face)
+          , L = length(male_face)
+            , ratio = 100 * s / L) %>%
     distinct() %>%  
     mutate(male_participant = if_else(male_participant == 1, 'Man', 'Woman')) %>% 
 ggplot(aes(x = doc_lay, y = ratio, fill = know_IDK, color = know_IDK)) + 
